@@ -1,0 +1,115 @@
+name: AppOrbit Cross-Platform Build & Release
+
+on:
+  push:
+    branches: [ main, master ]
+    tags: [ 'v*' ]
+  pull_request:
+    branches: [ main, master ]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  test:
+    name: Run Automated Tests
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: 'npm'
+
+      - name: Install Dependencies
+        run: npm install
+
+      - name: Run Tests
+        run: npm test
+
+  build:
+    name: Build (${{ matrix.os }})
+    needs: test
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [windows-latest, macos-latest, ubuntu-latest]
+        include:
+          - os: windows-latest
+            artifact_name: windows-binaries
+            artifact_path: dist/*.exe
+          - os: macos-latest
+            artifact_name: macos-binaries
+            artifact_path: dist/*.dmg
+          - os: ubuntu-latest
+            artifact_name: linux-binaries
+            artifact_path: dist/*.AppImage
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: 'npm'
+
+      - name: Install Dependencies
+        run: npm install
+
+      - name: Generate Catalog
+        run: node scripts/build-catalog.js
+
+      - name: Build Windows Packages
+        if: matrix.os == 'windows-latest'
+        run: npx electron-builder --win nsis portable --x64
+        env:
+          CSC_IDENTITY_AUTO_DISCOVERY: false
+
+      - name: Build macOS Packages
+        if: matrix.os == 'macos-latest'
+        run: npx electron-builder --mac dmg zip
+        env:
+          CSC_IDENTITY_AUTO_DISCOVERY: false
+
+      - name: Build Linux Packages
+        if: matrix.os == 'ubuntu-latest'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y libarchive-tools
+          npx electron-builder --linux AppImage deb
+
+      - name: Upload Build Artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ matrix.artifact_name }}
+          path: ${{ matrix.artifact_path }}
+          if-no-files-found: warn
+
+  release:
+    name: Create GitHub Release
+    if: startsWith(github.ref, 'refs/tags/v')
+    needs: build
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Download All Artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: release-artifacts
+
+      - name: Publish GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          files: release-artifacts/**/*
+          generate_release_notes: true
+          draft: false
+          prerelease: false

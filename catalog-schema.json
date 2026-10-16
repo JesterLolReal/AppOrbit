@@ -1,0 +1,80 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "AppOrbit Catalog Schema",
+  "type": "object",
+  "required": ["version", "lastUpdated", "categories", "totalApps", "apps"],
+  "properties": {
+    "version": { "type": "string" },
+    "lastUpdated": { "type": "string" },
+    "categories": {
+      "type": "array",
+      "items": { "type": "string" }
+    },
+    "totalApps": { "type": "integer" },
+    "apps": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "id",
+          "name",
+          "category",
+          "description",
+          "publisher",
+          "website",
+          "supportedOS",
+          "architectures"
+        ],
+        "properties": {
+          "id": { "type": "string", "pattern": "^[a-z0-9-]+$" },
+          "name": { "type": "string" },
+          "category": { "type": "string" },
+          "description": { "type": "string" },
+          "publisher": { "type": "string" },
+          "website": { "type": "string", "format": "uri" },
+          "downloadPage": { "type": "string" },
+          "license": { "type": "string" },
+          "requiresAdmin": { "type": "boolean" },
+          "supportedOS": {
+            "type": "array",
+            "items": { "type": "string", "enum": ["windows", "macos", "linux"] }
+          },
+          "architectures": {
+            "type": "array",
+            "items": { "type": "string", "enum": ["x64", "arm64", "x86"] }
+          },
+          "packages": {
+            "type": "object",
+            "properties": {
+              "windows": {
+                "type": "object",
+                "properties": {
+                  "manager": { "type": "string" },
+                  "packageId": { "type": "string" },
+                  "silentArgs": { "type": "array", "items": { "type": "string" } }
+                }
+              },
+              "macos": {
+                "type": "object",
+                "properties": {
+                  "manager": { "type": "string" },
+                  "packageId": { "type": "string" },
+                  "cask": { "type": "boolean" }
+                }
+              },
+              "linux": {
+                "type": "object",
+                "properties": {
+                  "manager": { "type": "string" },
+                  "packageId": { "type": "string" }
+                }
+              }
+            }
+          },
+          "tags": { "type": "array", "items": { "type": "string" } },
+          "featured": { "type": "boolean" }
+        }
+      }
+    }
+  }
+}

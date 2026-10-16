@@ -1,0 +1,345 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self' 'unsafe-inline'; img-src 'self' data: https:; style-src 'self' 'unsafe-inline'; script-src 'self' 'unsafe-inline';">
+  <title>AppOrbit — Every app. One orbit.</title>
+  <link rel="stylesheet" href="styles/main.css">
+  <link rel="stylesheet" href="styles/components.css">
+</head>
+<body data-theme="dark-orbit">
+  <div class="app-container">
+    <!-- Sidebar -->
+    <aside class="sidebar">
+      <div class="brand-section">
+        <div class="brand-logo-container" id="brand-logo-slot"></div>
+        <div class="brand-info">
+          <h1>AppOrbit</h1>
+          <p>Every app. One orbit.</p>
+        </div>
+      </div>
+
+      <nav class="nav-menu">
+        <a class="nav-item active" data-view="discover">
+          <span class="nav-icon" id="nav-icon-discover"></span>
+          <span>Discover</span>
+          <span class="nav-badge" id="catalog-count-badge">233</span>
+        </a>
+        <a class="nav-item" data-view="updates">
+          <span class="nav-icon" id="nav-icon-updates"></span>
+          <span>Updates</span>
+          <span class="nav-badge" id="updates-count-badge" style="display:none;">0</span>
+        </a>
+        <a class="nav-item" data-view="installed">
+          <span class="nav-icon" id="nav-icon-installed"></span>
+          <span>Installed Apps</span>
+          <span class="nav-badge" id="installed-count-badge">0</span>
+        </a>
+        <a class="nav-item" data-view="queue">
+          <span class="nav-icon" id="nav-icon-queue"></span>
+          <span>Job Queue</span>
+          <span class="nav-badge" id="queue-count-badge" style="display:none;">0</span>
+        </a>
+        <a class="nav-item" data-view="favorites">
+          <span class="nav-icon" id="nav-icon-favorites"></span>
+          <span>Favorites</span>
+          <span class="nav-badge" id="favorites-count-badge">0</span>
+        </a>
+        <a class="nav-item" data-view="history">
+          <span class="nav-icon" id="nav-icon-history"></span>
+          <span>History</span>
+        </a>
+        <a class="nav-item" data-view="settings">
+          <span class="nav-icon" id="nav-icon-settings"></span>
+          <span>Diagnostics & Settings</span>
+        </a>
+      </nav>
+
+      <div class="sidebar-footer">
+        <div class="system-status-chip">
+          <span class="status-dot"></span>
+          <span id="system-os-indicator">Detecting system...</span>
+        </div>
+      </div>
+    </aside>
+
+    <!-- Main Content Area -->
+    <main class="main-content">
+      <!-- Auto-Update Notification Banner -->
+      <div id="update-notification-banner" class="update-banner" style="display: none;">
+        <div class="update-banner-content">
+          <div class="update-banner-icon">🚀</div>
+          <div class="update-banner-text">
+            <div class="update-banner-title">
+              <span id="update-banner-headline">AppOrbit Update Available</span>
+              <span class="update-version-tag" id="update-banner-version">v1.1.0</span>
+            </div>
+            <div class="update-banner-desc" id="update-banner-desc">A new version of AppOrbit is available with new packages and improvements.</div>
+            <div id="update-progress-container" class="update-progress-bar-container" style="display: none;">
+              <div class="update-progress-bar-fill" id="update-progress-bar-fill" style="width: 0%;"></div>
+            </div>
+          </div>
+          <div class="update-banner-actions">
+            <span id="update-progress-percent" style="display: none; font-size: 0.8rem; font-weight: 600; color: var(--accent-cyan); margin-right: 8px;">0%</span>
+            <button id="btn-update-action" class="btn-glowing-launch" style="padding: 6px 16px; font-size: 0.82rem;">Update & Restart</button>
+            <button id="btn-update-dismiss" class="btn-icon" title="Dismiss">&times;</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Top Bar -->
+      <header class="top-bar">
+        <div class="search-box-wrapper">
+          <span class="search-icon" id="top-search-icon"></span>
+          <input type="text" id="main-search-input" class="search-input" placeholder="Search 230+ apps, tags, publishers..." autocomplete="off" spellcheck="false">
+          <span class="search-shortcut">Ctrl+K</span>
+        </div>
+
+        <div class="top-bar-actions">
+          <button id="btn-toggle-view" class="btn-icon" title="Toggle Grid / List view"></button>
+          <button id="btn-refresh-status" class="btn-icon" title="Refresh installed & update status"></button>
+          <button id="btn-check-app-update" class="btn-icon" title="Check for AppOrbit updates"></button>
+          <button id="btn-export-selections" class="btn-icon" title="Export selections (JSON)"></button>
+          <button id="btn-import-selections" class="btn-icon" title="Import selections (JSON)"></button>
+        </div>
+      </header>
+
+      <!-- View 1: Discover & App Picker -->
+      <section id="view-discover" class="view-panel active">
+        <!-- Category Filter Chips -->
+        <div class="category-chips-bar" id="category-chips-container"></div>
+
+        <!-- Filter and Bulk Action Controls -->
+        <div class="filter-bulk-bar">
+          <div class="filters-left">
+            <div class="filter-group">
+              <label for="platform-filter">Platform:</label>
+              <select id="platform-filter" class="filter-select">
+                <option value="all">All Platforms</option>
+                <option value="windows" selected>Windows Compatible</option>
+                <option value="macos">macOS Compatible</option>
+                <option value="linux">Linux Compatible</option>
+              </select>
+            </div>
+            <div class="filter-group">
+              <label for="install-filter">Status:</label>
+              <select id="install-filter" class="filter-select">
+                <option value="all">All Apps</option>
+                <option value="installed">Installed Only</option>
+                <option value="not-installed">Not Installed</option>
+                <option value="updates">Updates Available</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="bulk-actions-right">
+            <button id="btn-select-visible" class="btn-secondary">Select Visible</button>
+            <button id="btn-deselect-all" class="btn-secondary">Deselect All</button>
+            <button id="btn-select-category" class="btn-secondary">Select Current Category</button>
+          </div>
+        </div>
+
+        <!-- App Cards Scroll Area -->
+        <div class="apps-scroll-area">
+          <div class="apps-grid" id="apps-grid-container"></div>
+        </div>
+      </section>
+
+      <!-- View 2: Updates -->
+      <section id="view-updates" class="view-panel">
+        <div class="apps-scroll-area" style="padding-top: 24px;">
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; flex-wrap: wrap; gap: 12px;">
+            <div>
+              <h2 style="font-size: 1.3rem; font-weight: 700;">Software Updates</h2>
+              <p style="font-size: 0.85rem; color: var(--text-muted);">Check, update, and automate application updates on this computer.</p>
+            </div>
+            <div style="display: flex; gap: 10px; align-items: center;">
+              <button id="btn-auto-update-all-apps" class="btn-glowing-launch" style="padding: 8px 16px; font-size: 0.85rem; background: linear-gradient(135deg, #00f2fe, #3b82f6); display: none;">⚡ Orbit Auto-Update All</button>
+              <button id="btn-check-updates-now" class="btn-secondary" style="padding: 8px 16px; font-size: 0.85rem;">Check for App Updates</button>
+            </div>
+          </div>
+          <div id="updates-list-container" class="apps-grid"></div>
+        </div>
+      </section>
+
+      <!-- View 3: Installed Apps -->
+      <section id="view-installed" class="view-panel">
+        <div class="apps-scroll-area" style="padding-top: 24px;">
+          <div style="margin-bottom: 20px;">
+            <h2 style="font-size: 1.3rem; font-weight: 700;">Installed Applications</h2>
+            <p style="font-size: 0.85rem; color: var(--text-muted);">Apps detected on this computer.</p>
+          </div>
+          <div id="installed-list-container" class="apps-grid"></div>
+        </div>
+      </section>
+
+      <!-- View 4: Live Queue -->
+      <section id="view-queue" class="view-panel">
+        <div class="apps-scroll-area" style="padding-top: 24px;">
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
+            <div>
+              <h2 style="font-size: 1.3rem; font-weight: 700;">Live Execution Queue</h2>
+              <p style="font-size: 0.85rem; color: var(--text-muted);">Real-time process status, progress, and logs.</p>
+            </div>
+            <div style="display: flex; gap: 10px;">
+              <button id="btn-queue-cancel-all" class="btn-secondary" style="color: var(--accent-rose);">Cancel All</button>
+              <button id="btn-queue-clear-finished" class="btn-secondary">Clear Finished</button>
+            </div>
+          </div>
+          <div id="queue-jobs-container" style="display: flex; flex-direction: column; gap: 12px; margin-bottom: 20px;"></div>
+          <div style="margin-top: 20px;">
+            <h3 style="font-size: 0.95rem; font-weight: 600; margin-bottom: 8px; color: var(--text-muted);">Diagnostic Console Output</h3>
+            <div class="terminal-viewer" id="queue-terminal">
+              <div class="terminal-line">[AppOrbit 2.0] System ready. Enqueue applications to begin batch installation.</div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- View 5: Favorites -->
+      <section id="view-favorites" class="view-panel">
+        <div class="apps-scroll-area" style="padding-top: 24px;">
+          <div style="margin-bottom: 20px;">
+            <h2 style="font-size: 1.3rem; font-weight: 700;">Favorite Applications</h2>
+            <p style="font-size: 0.85rem; color: var(--text-muted);">Starred apps for quick re-selection.</p>
+          </div>
+          <div id="favorites-grid-container" class="apps-grid"></div>
+        </div>
+      </section>
+
+      <!-- View 6: History -->
+      <section id="view-history" class="view-panel">
+        <div class="apps-scroll-area" style="padding-top: 24px;">
+          <div style="margin-bottom: 20px;">
+            <h2 style="font-size: 1.3rem; font-weight: 700;">Installation History</h2>
+            <p style="font-size: 0.85rem; color: var(--text-muted);">Records of previous batch jobs.</p>
+          </div>
+          <div id="history-container" style="display: flex; flex-direction: column; gap: 14px;"></div>
+        </div>
+      </section>
+
+      <!-- View 7: Settings & Diagnostics -->
+      <section id="view-settings" class="view-panel">
+        <div class="apps-scroll-area" style="padding-top: 24px; max-width: 800px;">
+          <div style="margin-bottom: 24px;">
+            <h2 style="font-size: 1.3rem; font-weight: 700;">Diagnostics & Configuration</h2>
+            <p style="font-size: 0.85rem; color: var(--text-muted);">Runtime environment, security, and catalog sync.</p>
+          </div>
+
+          <div style="background: var(--bg-surface); border: 1px solid var(--border-subtle); border-radius: var(--radius-md); padding: 20px; margin-bottom: 20px;">
+            <h3 style="font-size: 1rem; font-weight: 600; margin-bottom: 12px; color: var(--accent-cyan);">System Diagnostics</h3>
+            <div id="settings-diagnostics-body" style="font-size: 0.84rem; line-height: 1.8; color: var(--text-muted);">Loading diagnostics...</div>
+          </div>
+
+          <div style="background: var(--bg-surface); border: 1px solid var(--border-subtle); border-radius: var(--radius-md); padding: 20px; margin-bottom: 20px;">
+            <h3 style="font-size: 1rem; font-weight: 600; margin-bottom: 12px; color: var(--accent-violet);">Queue Concurrency</h3>
+            <p style="font-size: 0.82rem; color: var(--text-muted); margin-bottom: 14px;">Configure how many packages install simultaneously:</p>
+            <select id="setting-concurrency-select" class="filter-select" style="padding: 6px 12px;">
+              <option value="1">1 (Sequential - Recommended & Safe)</option>
+              <option value="2">2 (Dual Concurrent)</option>
+              <option value="4">4 (Parallel High-Speed)</option>
+            </select>
+          </div>
+
+          <div style="background: var(--bg-surface); border: 1px solid var(--border-subtle); border-radius: var(--radius-md); padding: 20px; margin-bottom: 20px;">
+            <h3 style="font-size: 1rem; font-weight: 600; margin-bottom: 12px; color: var(--accent-cyan);">Theme Appearance</h3>
+            <select id="setting-theme-select" class="filter-select" style="padding: 6px 12px;">
+              <option value="dark-orbit">Dark Orbit (Default)</option>
+              <option value="deep-space">Deep Space Black</option>
+              <option value="cyber-neon">Cyber Neon</option>
+            </select>
+          </div>
+
+          <div style="background: var(--bg-surface); border: 1px solid var(--border-subtle); border-radius: var(--radius-md); padding: 20px; margin-bottom: 20px;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
+              <h3 style="font-size: 1rem; font-weight: 600; color: var(--accent-cyan);">AppOrbit Application Updates</h3>
+              <span class="chip-count" id="settings-app-version-badge" style="background: rgba(0, 242, 254, 0.15); color: var(--accent-cyan); font-weight: 600; padding: 3px 10px; border-radius: 12px;">v1.0.0</span>
+            </div>
+            <p style="font-size: 0.82rem; color: var(--text-muted); margin-bottom: 14px;">Automatically checks for fresh updates every time you launch AppOrbit or install apps.</p>
+            
+            <div style="display: flex; flex-direction: column; gap: 10px; margin-bottom: 16px;">
+              <label style="display: flex; align-items: center; gap: 10px; font-size: 0.84rem; cursor: pointer;">
+                <input type="checkbox" id="setting-auto-check-updates" checked style="accent-color: var(--accent-cyan); width: 16px; height: 16px;">
+                <span>Auto-check for updates every time AppOrbit opens</span>
+              </label>
+              <label style="display: flex; align-items: center; gap: 10px; font-size: 0.84rem; cursor: pointer;">
+                <input type="checkbox" id="setting-auto-download-updates" checked style="accent-color: var(--accent-cyan); width: 16px; height: 16px;">
+                <span>Auto-download updates in the background</span>
+              </label>
+              <label style="display: flex; align-items: center; gap: 10px; font-size: 0.84rem; cursor: pointer;">
+                <input type="checkbox" id="setting-auto-sync-catalog" checked style="accent-color: var(--accent-cyan); width: 16px; height: 16px;">
+                <span>Auto-sync live package catalog definitions on launch</span>
+              </label>
+            </div>
+
+            <div style="display: flex; gap: 12px; align-items: center; flex-wrap: wrap;">
+              <button id="btn-settings-check-app-update" class="btn-glowing-launch" style="padding: 7px 16px; font-size: 0.84rem;">Check for AppOrbit Updates</button>
+              <span id="settings-update-status-label" style="font-size: 0.82rem; color: var(--text-muted);">Up to date</span>
+            </div>
+          </div>
+
+          <div style="background: var(--bg-surface); border: 1px solid var(--border-subtle); border-radius: var(--radius-md); padding: 20px;">
+            <h3 style="font-size: 1rem; font-weight: 600; margin-bottom: 12px; color: var(--accent-blue);">Catalog Maintenance</h3>
+            <p style="font-size: 0.82rem; color: var(--text-muted); margin-bottom: 10px;" id="catalog-metadata-text">Loading catalog stats...</p>
+            <button id="btn-sync-catalog-now" class="btn-secondary">Check for Catalog Updates</button>
+          </div>
+        </div>
+      </section>
+
+      <!-- Selection Basket Floating Dock -->
+      <div id="selection-basket" class="selection-basket-dock">
+        <div class="basket-left">
+          <span class="basket-count-pill" id="basket-count">0</span>
+          <span class="basket-summary-text" id="basket-text">No apps selected</span>
+        </div>
+        <div class="basket-right">
+          <button id="btn-basket-clear" class="btn-secondary">Clear</button>
+          <button id="btn-basket-review" class="btn-glowing-launch">
+            <span id="rocket-icon-slot"></span>
+            <span>Review & Install</span>
+          </button>
+        </div>
+      </div>
+    </main>
+  </div>
+
+  <!-- Confirmation Modal -->
+  <div id="install-modal" class="modal-overlay">
+    <div class="modal-card">
+      <div class="modal-header">
+        <h2>Confirm Batch Installation</h2>
+        <button id="btn-modal-close" class="btn-icon"></button>
+      </div>
+      <div class="modal-body">
+        <p style="font-size: 0.88rem; color: var(--text-muted); margin-bottom: 16px;">
+          You are about to install <strong id="modal-app-count" style="color: var(--accent-cyan);">0</strong> applications. Review the package list and execution parameters:
+        </p>
+        <div id="modal-app-list" style="max-height: 260px; overflow-y: auto; background: var(--bg-surface); border: 1px solid var(--border-subtle); border-radius: var(--radius-sm); padding: 12px; font-size: 0.82rem; line-height: 1.8;"></div>
+        
+        <div style="margin-top: 16px; padding: 12px; background: rgba(244, 63, 94, 0.08); border: 1px solid rgba(244, 63, 94, 0.2); border-radius: var(--radius-sm); font-size: 0.78rem; color: #fda4af;">
+          <strong>Security Notice:</strong> Packages are verified against official publisher sources via the native platform package manager. Administrative prompts will only appear if a package legitimately requires elevated permissions.
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button id="btn-modal-cancel" class="btn-secondary">Cancel</button>
+        <button id="btn-modal-confirm" class="btn-glowing-launch">Launch Orbit</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- App Details Drawer -->
+  <aside id="details-drawer" class="details-drawer">
+    <div class="modal-header">
+      <h2 id="drawer-app-name">App Details</h2>
+      <button id="btn-drawer-close" class="btn-icon"></button>
+    </div>
+    <div class="modal-body" id="drawer-body-content"></div>
+  </aside>
+
+  <!-- Scripts -->
+  <script src="scripts/icons.js"></script>
+  <script src="scripts/app-icons.js"></script>
+  <script src="scripts/app.js"></script>
+</body>
+</html>
